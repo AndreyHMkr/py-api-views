@@ -16,7 +16,12 @@ class MovieSerializer(serializers.Serializer):
     )
 
     def create(self, validated_data):
-        return Movie.objects.create(**validated_data)
+        actors = validated_data.pop("actors", [])
+        genres = validated_data.pop("genres", [])
+        movie = Movie.objects.create(**validated_data)
+        movie.actors.set(actors)
+        movie.genres.set(genres)
+        return movie
 
     def update(self, instance, validated_data):
         instance.title = validated_data.get("title", instance.title)
@@ -24,9 +29,13 @@ class MovieSerializer(serializers.Serializer):
             "description", instance.description
         )
         instance.duration = validated_data.get("duration", instance.duration)
-        instance.actors = validated_data.get("actors", instance.actors)
-        instance.genres = validated_data.get("genres", instance.genres)
+        actors = validated_data.pop("actors", None)
+        genres = validated_data.pop("genres", None)
         instance.save()
+        if actors is not None:
+            instance.actors.set(actors)
+        if genres is not None:
+            instance.genres.set(genres)
         return instance
 
 
